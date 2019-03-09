@@ -28,6 +28,7 @@ for net in nets:
     if net.ssid == secrets.WIFI_SSID:
         if not wlan.isconnected():
             wlan.connect(secrets.WIFI_SSID, auth=(WLAN.WPA2, secrets.WIFI_PASS), timeout=5000)
+            print("Coneted to " + secrets.WIFI_SSID)
         while not wlan.isconnected():
             machine.idle() # save power while waiting
         pycom.rgbled(0x007f00) # green
