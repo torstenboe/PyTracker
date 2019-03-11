@@ -29,6 +29,7 @@ def check_for_valid_coordinates(gps):
     data has been parsed successfully. If so, copies it over to global last_data.
     '''
     if gps.satellite_data_updated() and gps.valid:
+        last_data['timestamp'] = gps.timestamp
         last_data['date'] = gps.date_string("long")
         last_data['latitude'] = gps.latitude_string()
         last_data['longitude'] = gps.longitude_string()
@@ -46,6 +47,8 @@ while True:
     if elapsed > GPS_TIMEOUT_SECS:
         break
 print("Finished.")
+if 'timestamp' in last_data:
+    print("@ ", last_data['timestamp'])
 if 'date' in last_data:
     print("@ ", last_data['date'])
 if 'latitude' in last_data and 'longitude' in last_data:

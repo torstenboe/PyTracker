@@ -13,7 +13,7 @@ os.dupterm(uart)
 uart1 = UART(1, 9600)
 
 pycom.heartbeat(False)
-pycom.rgbled(0x7f7f00) # yellow
+pycom.rgbled(0x7f0000) # red
 
 wlan = WLAN() # get current object, without changing the mode
 
