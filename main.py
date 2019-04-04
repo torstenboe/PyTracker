@@ -2,34 +2,43 @@ import machine
 from machine import I2C
 from network import LoRa
 import socket
-import binascii
+import ubinascii
 import struct
 import pycom
 import sys
 import time
 
-# Setup the LoRaWAN part
-# Initialize LoRa in LORAWAN mode.
-lora = LoRa(mode=LoRa.LORAWAN)
-# create an ABP authentication params
-dev_addr = struct.unpack(">l", binascii.unhexlify(secrets.DEV_ADDR.replace(' ','')))[0]
-nwk_swkey = binascii.unhexlify(secrets.NWK_SWKEY.replace(' ',''))
-app_swkey = binascii.unhexlify(secrets.APP_SWKEY.replace(' ',''))
-# join a network using ABP (Activation By Personalization)
-lora.join(activation=LoRa.ABP, auth=(dev_addr, nwk_swkey, app_swkey))
-# remove all the non-default channels
-for i in range(3, 16):
-    lora.remove_channel(i)
-# set the 3 default channels to the same frequency
-lora.add_channel(0, frequency=868100000, dr_min=0, dr_max=5)
-lora.add_channel(1, frequency=868100000, dr_min=0, dr_max=5)
-lora.add_channel(2, frequency=868100000, dr_min=0, dr_max=5)
+# Initialise LoRa in LORAWAN mode.
+# Please pick the region that matches where you are using the device:
+# Asia = LoRa.AS923
+# Australia = LoRa.AU915
+# Europe = LoRa.EU868
+# United States = LoRa.US915
+lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
+# create an OTAA authentication parameters
+app_eui = ubinascii.unhexlify(secrets.APP_EUI)
+app_key = ubinascii.unhexlify(secrets.APP_KEY)
+# join a network using OTAA (Over the Air Activation)
+lora.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
+# wait until the module has joined the network
+while not lora.has_joined():
+    time.sleep(2.5)
+    print('Not yet joined...')
 # create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 # set the LoRaWAN data rate
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 # make the socket blocking
+# (waits for the data to be sent and for the 2 receive windows to expire)
+s.setblocking(True)
+# send some data
+s.send(bytes([0x01, 0x02, 0x03]))
+# make the socket non-blocking
+# (because if there's no data received it will block forever...)
 s.setblocking(False)
+# get any data received (if any...)
+data = s.recv(64)
+print(data)
 
 # for microGPS see https://github.com/inmcm/micropyGPS/blob/master/micropyGPS.py
 from micropyGPS import MicropyGPS
